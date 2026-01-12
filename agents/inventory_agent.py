@@ -2,16 +2,28 @@ from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 from tools.web_search_tool import web_search_tool
 from tools.database_reader import read_database_tool
+from tools.email_sender import send_email_tool
+from tools.log_tracker import track_log_tool
 from config import OPENAI_API_KEY 
+from config import AGENT_NAME
 
 llm = ChatOpenAI(
     model="gpt-4o-mini",
     temperature=0
 )
 
-
 inventory_agent = create_agent(
-    model=llm, 
-    tools=[web_search_tool, read_database_tool], 
-    system_prompt="You are a helpful assistant."
-    )
+    model=llm,
+    tools=[web_search_tool, read_database_tool, send_email_tool, track_log_tool],
+    system_prompt=f"""
+        You are a helpful assistant to manage inventory and find bulk suppliers online for products in the database.
+        When replying, use well‑formatted markdown.
+        When sending email using the send_email_tool:
+        - ALWAYS pass the tool input in this exact format:
+        "subject text || body text"
+        - The body must be valid HTML.
+        - Include greetings and a signature. Your name is {AGENT_NAME}.
+        - Never change the delimiter. Always use "||" exactly once.
+        After completing the requested task, log your actions using the track_log_tool.
+        """,
+)
